@@ -8,3 +8,8 @@ __pycache__/
 .venv/
 venv/
 *.log
+dump.py
+dump2.json
+page_dump.html
+data/
+

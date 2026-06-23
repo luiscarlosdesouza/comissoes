@@ -52,90 +52,57 @@ async def _extract_data(page) -> dict:
             secoes: []
         };
         
-        // Tenta achar o título principal (h1 ou título maior)
-        const h1 = document.querySelector('h1, .titulo-principal, .header-title');
+        const h1 = document.querySelector('h1, h2, h3, .titulo');
         if (h1) result.titulo = h1.innerText.trim();
         
-        // Tenta encontrar seções (Titulares, Suplentes, Categorias)
-        // Heurística: pega h2/h3/h4 ou divs com classes sugestivas, e a tabela/lista logo abaixo
-        const headings = Array.from(document.querySelectorAll('h2, h3, h4, .secao-titulo, .categoria-titulo'));
+        // Estrutura real mapeada: seções são delimitadas por div.pb-4 contendo .titulogrupo
+        const groups = document.querySelectorAll('.pb-4');
         
-        if (headings.length > 0) {
-            headings.forEach(heading => {
-                const secao = {
-                    nome: heading.innerText.trim(),
-                    membros: []
-                };
-                
-                // Pega o próximo elemento irmão que seja tabela ou lista
-                let sibling = heading.nextElementSibling;
-                let container = null;
-                while (sibling) {
-                    if (sibling.tagName === 'TABLE' || sibling.tagName === 'UL' || sibling.querySelector('table, ul')) {
-                        container = sibling.tagName === 'TABLE' || sibling.tagName === 'UL' ? sibling : sibling.querySelector('table, ul');
-                        break;
-                    }
-                    sibling = sibling.nextElementSibling;
-                }
-                
-                if (container && container.tagName === 'TABLE') {
-                    const rows = Array.from(container.querySelectorAll('tr'));
-                    rows.forEach(row => {
-                        const cols = Array.from(row.querySelectorAll('td, th'));
-                        if (cols.length >= 2) {
-                            const textCols = cols.map(c => c.innerText.trim());
-                            // Heurística para descobrir quem é quem:
-                            // Vamos assumir que a string maior é o nome e datas possuem barras (/)
-                            
-                            let nome = '';
-                            let inicio = '';
-                            let fim = '';
-                            
-                            textCols.forEach(text => {
-                                if (text.match(/\\d{2}\\/\\d{2}\\/\\d{4}/)) {
-                                    if (!inicio) inicio = text;
-                                    else if (!fim) fim = text;
-                                } else if (text.length > nome.length && text.length > 3) {
-                                    nome = text;
-                                }
-                            });
-                            
-                            if (nome) {
-                                secao.membros.push({
-                                    nome: nome,
-                                    inicio_mandato: inicio,
-                                    fim_mandato: fim
-                                });
-                            }
-                        }
-                    });
-                }
-                
-                if (secao.membros.length > 0) {
-                    result.secoes.push(secao);
-                }
-            });
-        }
-        
-        // Se não achou por seções, tenta achar qualquer tabela genérica na tela
-        if (result.secoes.length === 0) {
-            const fallbackSecao = { nome: "Geral", membros: [] };
-            const rows = Array.from(document.querySelectorAll('table tr'));
+        groups.forEach(group => {
+            const titleEl = group.querySelector('.titulogrupo');
+            if (!titleEl) return;
+            
+            const secao = {
+                nome: titleEl.innerText.trim(),
+                membros: []
+            };
+            
+            // Titulares costumam ser .pt-4 e suplentes .pt-2
+            const rows = group.querySelectorAll('.pt-4, .pt-2');
             rows.forEach(row => {
-                 const cols = Array.from(row.querySelectorAll('td'));
-                 if (cols.length >= 2) {
-                     // Lógica similar de fallback
-                     fallbackSecao.membros.push({
-                         nome: cols[0].innerText.trim(),
-                         inicio_mandato: cols[1] ? cols[1].innerText.trim() : '',
-                         fim_mandato: cols[2] ? cols[2].innerText.trim() : ''
-                     });
-                 }
+                const nameEl = row.querySelector('.w-60');
+                const dateEls = row.querySelectorAll('.w-20');
+                
+                if (nameEl) {
+                    let nome = nameEl.innerText.trim();
+                    nome = nome.replace(/\\n/g, ' ').replace(/\s+/g, ' ');
+                    
+                    let cargoFinal = secao.nome;
+                    if (nome.includes('- Suplente') || row.querySelector('.suplenteLabel')) {
+                        cargoFinal += " (Suplente)";
+                        nome = nome.replace('- Suplente', '').trim();
+                    } else {
+                        cargoFinal += " (Titular)";
+                    }
+                    
+                    let inicio = dateEls.length > 0 ? dateEls[0].innerText.trim() : '';
+                    let fim = dateEls.length > 1 ? dateEls[1].innerText.trim() : '';
+                    
+                    if (nome && nome.length > 3) {
+                        secao.membros.push({
+                            nome: nome,
+                            cargo_real: cargoFinal,
+                            inicio_mandato: inicio,
+                            fim_mandato: fim
+                        });
+                    }
+                }
             });
-            if (fallbackSecao.membros.length > 0) {
-                result.secoes.push(fallbackSecao);
+            
+            if (secao.membros.length > 0) {
+                result.secoes.push(secao);
             }
-        }
+        });
         
         return result;
     }
@@ -237,7 +204,7 @@ async def update_all_comissoes(db):
                     novo_membro = models.Membro(
                         comissao_id=comissao.id,
                         nome=membro_dict.get("nome", ""),
-                        cargo=categoria_nome,  # Mapeamos a seção (ex: Titulares) como o cargo do membro
+                        cargo=membro_dict.get("cargo_real", categoria_nome),
                         periodo=periodo_str
                     )
                     db.add(novo_membro)
