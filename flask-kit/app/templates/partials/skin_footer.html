@@ -1,0 +1,9 @@
+<footer class="mt-5 mb-4 border-top pt-3">
+    <div class="text-center text-muted">
+        {% if config.USP_THEME_SKIN == 'ime' %}
+            <a href="https://si.ime.usp.br/" target="_blank" class="text-muted">© {{ config.CURRENT_YEAR | default('2024') }} STI IME</a>
+        {% else %}
+            <p>© {{ config.CURRENT_YEAR | default('2024') }} {{ config.USP_THEME_FOOTER_TEXT | default('Universidade de São Paulo') }}</p>
+        {% endif %}
+    </div>
+</footer>

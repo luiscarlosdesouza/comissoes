@@ -1,0 +1,30 @@
+{% extends "admin/base.html" %}
+
+{% block nav_items %}
+<div>
+    <a href="/admin/logout" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded text-sm transition">Sair</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="flex flex-col md:flex-row gap-6">
+    
+    <div class="w-full md:w-1/3">
+        {% include "admin/comissao_form.html" %}
+    </div>
+
+    <div class="w-full md:w-2/3">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold text-gray-800">Comissões Cadastradas</h2>
+            <form action="/admin/force_update_all" method="POST" class="inline">
+                <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded shadow transition">
+                    Atualizar Todas
+                </button>
+            </form>
+        </div>
+        
+        {% include "admin/comissao_list.html" %}
+    </div>
+    
+</div>
+{% endblock %}

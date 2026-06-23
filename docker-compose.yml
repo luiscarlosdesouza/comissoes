@@ -1,0 +1,13 @@
+
+services:
+  web:
+    build: .
+    container_name: usp_comissoes_web
+    ports:
+      - "8020:8020"
+    volumes:
+      - .:/app
+      - ./data:/app/data
+    env_file:
+      - .env
+    restart: unless-stopped

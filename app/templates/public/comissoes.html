@@ -1,0 +1,125 @@
+<!-- Estilos isolados com prefixo ime- para não conflitar com WordPress -->
+<style>
+    .ime-comissoes-container {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        max-width: 100%;
+        margin: 20px 0;
+    }
+    .ime-comissao-accordion {
+        border: 1px solid #ddd;
+        margin-bottom: 10px;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    .ime-comissao-header {
+        background-color: #f5f5f5;
+        padding: 15px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: bold;
+        color: #333;
+        transition: background-color 0.2s;
+    }
+    .ime-comissao-header:hover {
+        background-color: #e9e9e9;
+    }
+    .ime-comissao-header::after {
+        content: '\25BC';
+        font-size: 12px;
+        transition: transform 0.3s;
+    }
+    .ime-comissao-accordion.ime-active .ime-comissao-header::after {
+        transform: rotate(180deg);
+    }
+    .ime-comissao-body {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+        background-color: #fff;
+    }
+    .ime-comissao-accordion.ime-active .ime-comissao-body {
+        max-height: 2000px; /* Arbitrary large value */
+        transition: max-height 0.5s ease-in;
+    }
+    .ime-membros-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 15px;
+        width: calc(100% - 30px);
+    }
+    .ime-membros-table th, .ime-membros-table td {
+        padding: 8px 12px;
+        border-bottom: 1px solid #eee;
+        text-align: left;
+        font-size: 14px;
+    }
+    .ime-membros-table th {
+        background-color: #fafafa;
+        color: #666;
+    }
+    .ime-btn-pdf {
+        display: inline-block;
+        padding: 8px 15px;
+        background-color: #005a9c; /* Azul USP */
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        font-size: 14px;
+        margin-bottom: 15px;
+        cursor: pointer;
+        border: none;
+    }
+    .ime-btn-pdf:hover {
+        background-color: #004578;
+        color: white;
+    }
+</style>
+
+<div class="ime-comissoes-container" id="ime-comissoes-wrapper">
+    <button class="ime-btn-pdf" onclick="imePrintPdf()">🖨️ Salvar em PDF / Imprimir</button>
+    
+    {% for comissao in comissoes %}
+    <div class="ime-comissao-accordion">
+        <div class="ime-comissao-header" onclick="this.parentElement.classList.toggle('ime-active')">
+            {{ comissao.nome }}
+        </div>
+        <div class="ime-comissao-body">
+            {% if comissao.membros %}
+            <table class="ime-membros-table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Cargo</th>
+                        <th>Período</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for membro in comissao.membros %}
+                    <tr>
+                        <td>{{ membro.nome }}</td>
+                        <td>{{ membro.cargo }}</td>
+                        <td>{{ membro.periodo }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="padding: 15px; color: #666; font-size: 14px;">Nenhum membro listado ou dados não extraídos.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <p>Nenhuma comissão cadastrada no momento.</p>
+    {% endfor %}
+</div>
+
+<script>
+    // Função simples de print para gerar PDF usando o browser (como o usuário não respondeu sobre qual tipo de gerador de PDF queria)
+    function imePrintPdf() {
+        // Expande todos os accordions antes de imprimir
+        document.querySelectorAll('.ime-comissao-accordion').forEach(el => el.classList.add('ime-active'));
+        window.print();
+    }
+</script>

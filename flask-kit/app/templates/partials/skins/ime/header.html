@@ -1,0 +1,31 @@
+<div class="ime-logodefault">
+    <div class="ime-firstsecondthird">
+        <div class="ime-first">
+            <div class="ime-item">
+                <a class="ime-logo-link" href="{{ config.APP_URL }}">
+                <img class="ime-logo-img" src="{{ url_for('static', filename='vendor/laravel-usp-theme/skins/ime/images/logo_ime.png') }}">
+                </a>
+            </div>
+        </div>
+
+        <div class="ime-second">       
+            <div class="ime-item">
+                <div class="ime-slogan">
+                    <a class="ime-slogan-link" href="{{ config.APP_URL }}">{{ config.USP_THEME_SLOGAN | default('Instituto de Matemática e Estatística') }} </a>
+                </div>
+
+                <div class="ime-site-name">
+                    <a class="ime-site-name-link" href="{{ config.APP_URL }}">{{ config.APP_NAME }} </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="ime-third">
+            <div class="ime-item">
+                <a class="ime-logo-usp-link" href="https://www.usp.br" target="_blank">
+                    <img class="ime-logo-usp-img" src="{{ url_for('static', filename='vendor/laravel-usp-theme/skins/ime/images/usp.png') }}" alt="Logo da Universidade de São Paulo">
+                </a>  
+            </div>
+        </div>
+    </div>
+</div>

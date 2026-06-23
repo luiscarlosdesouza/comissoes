@@ -1,0 +1,55 @@
+<nav class="navbar navbar-expand-sm navbar-light bg-light mb-3 py-0 border-bottom border-top border-gray">
+    {# Menu de Sistemas (Globo) #}
+    {% if config.USP_THEME_SISTEMAS %}
+    <div class="nav-item dropdown">
+        <a class="navbar-brand dropdown-toggle" href="#" data-toggle="dropdown" title="Outros sistemas">
+            <i class="fas fa-globe"></i>
+        </a>
+        <div class="dropdown-menu">
+            {% for sistema in config.USP_THEME_SISTEMAS %}
+                <a class="dropdown-item" href="{{ sistema.url }}" target="_blank">
+                    <i class="fas fa-external-link-alt fa-xs"></i> {{ sistema.text }}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {# Nome do Site / Link Home #}
+    <a class="navbar-brand font-weight-bold" href="{{ url_for('index') }}">
+        {% block sitename %}{{ config.APP_NAME }}{% endblock %}
+    </a>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    {# Itens do Menu #}
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav mr-auto">
+            {% for item in config.USP_THEME_MENU %}
+                {% if item.submenu %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown{{ loop.index }}" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            {{ item.text }}
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown{{ loop.index }}">
+                            {% for subitem in item.submenu %}
+                                <a class="dropdown-item" href="{{ subitem.url }}">{{ subitem.text }}</a>
+                            {% endfor %}
+                        </div>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ item.url }}">{{ item.text }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+        
+        {# Menu Direito (Opcional) #}
+        <ul class="navbar-nav ml-auto">
+            {% block menu_right %}{% endblock %}
+        </ul>
+    </div>
+</nav>

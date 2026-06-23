@@ -1,0 +1,7 @@
+{% if config.USP_THEME_SKIN == 'ime' %}
+    {% include 'partials/skins/ime/header.html' %}
+{% else %}
+    <div class="p-3">
+        <h3 class="site-title">{{ config.APP_NAME }}</h3>
+    </div>
+{% endif %}

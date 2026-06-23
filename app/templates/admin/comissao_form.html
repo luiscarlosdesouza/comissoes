@@ -1,0 +1,16 @@
+<div class="bg-white p-6 rounded shadow-md border border-gray-200">
+    <h3 class="text-xl font-bold mb-4 text-gray-700 border-b pb-2">Adicionar Comissão</h3>
+    <form action="/admin/comissao/add" method="POST" class="flex flex-col gap-4">
+        <div>
+            <label class="block text-gray-700 text-sm font-bold mb-2">Nome do Colegiado / Comissão</label>
+            <input type="text" name="nome" required class="w-full border rounded px-3 py-2 focus:outline-none focus:border-blue-500 shadow-sm" placeholder="Ex: Comissão de Graduação">
+        </div>
+        <div>
+            <label class="block text-gray-700 text-sm font-bold mb-2">URL (Portal USP Vue.js)</label>
+            <input type="url" name="url" required class="w-full border rounded px-3 py-2 focus:outline-none focus:border-blue-500 shadow-sm" placeholder="https://...">
+        </div>
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded mt-2 transition">
+            Cadastrar
+        </button>
+    </form>
+</div>

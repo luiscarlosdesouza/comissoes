@@ -1,0 +1,38 @@
+<div class="bg-white shadow-md rounded border border-gray-200 overflow-x-auto">
+    <table class="text-left w-full border-collapse">
+        <thead>
+            <tr>
+                <th class="py-3 px-4 bg-gray-100 font-bold text-sm text-gray-600 border-b">ID</th>
+                <th class="py-3 px-4 bg-gray-100 font-bold text-sm text-gray-600 border-b">Nome</th>
+                <th class="py-3 px-4 bg-gray-100 font-bold text-sm text-gray-600 border-b">Atualização</th>
+                <th class="py-3 px-4 bg-gray-100 font-bold text-sm text-gray-600 border-b text-center">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for comissao in comissoes %}
+            <tr class="hover:bg-gray-50 border-b border-gray-100">
+                <td class="py-3 px-4 text-sm text-gray-500">{{ comissao.id }}</td>
+                <td class="py-3 px-4">
+                    <div class="font-semibold text-gray-800">{{ comissao.nome }}</div>
+                    <a href="{{ comissao.url }}" target="_blank" class="text-blue-500 hover:underline text-xs break-all">{{ comissao.url }}</a>
+                </td>
+                <td class="py-3 px-4 text-sm text-gray-600">
+                    {{ comissao.data_atualizacao.strftime('%d/%m/%Y %H:%M') if comissao.data_atualizacao else 'Nunca' }}
+                </td>
+                <td class="py-3 px-4 text-center space-x-2">
+                    <form action="/admin/force_update_single/{{ comissao.id }}" method="POST" class="inline">
+                        <button type="submit" class="text-blue-600 font-bold text-xs bg-blue-100 hover:bg-blue-200 px-2 py-1 rounded transition" title="Puxar dados novamente">Atualizar</button>
+                    </form>
+                    <form action="/admin/comissao/delete/{{ comissao.id }}" method="POST" class="inline" onsubmit="return confirm('Excluir esta comissão permanentemente?');">
+                        <button type="submit" class="text-red-500 font-bold text-xs bg-red-100 hover:bg-red-200 px-2 py-1 rounded transition" title="Apagar">Excluir</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" class="py-8 px-4 text-center text-gray-500 bg-gray-50">Nenhuma comissão foi cadastrada ainda.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

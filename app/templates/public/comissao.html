@@ -1,0 +1,214 @@
+<style>
+    /* CSS isolado com prefixo ime- para não conflitar com WordPress */
+    .ime-comissao-container {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        color: #333;
+        margin: 20px 0;
+        max-width: 100%;
+    }
+    
+    .ime-toolbar {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 15px;
+    }
+    
+    .ime-btn-pdf {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background-color: #005a9c; /* Azul USP */
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 14px;
+        text-decoration: none;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    
+    .ime-btn-pdf:hover {
+        background-color: #004578;
+        color: #ffffff;
+    }
+
+    .ime-accordion-item {
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        margin-bottom: 10px;
+        background-color: #ffffff;
+        overflow: hidden;
+    }
+
+    .ime-accordion-header {
+        padding: 16px 20px;
+        background-color: #f8fafc;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        user-select: none;
+        transition: background-color 0.2s;
+    }
+
+    .ime-accordion-header:hover {
+        background-color: #f1f5f9;
+    }
+
+    .ime-accordion-header::after {
+        content: '';
+        border: solid #64748b;
+        border-width: 0 2px 2px 0;
+        display: inline-block;
+        padding: 4px;
+        transform: rotate(45deg);
+        transition: transform 0.3s ease;
+    }
+
+    .ime-accordion-item.ime-active .ime-accordion-header::after {
+        transform: rotate(-135deg);
+    }
+
+    .ime-accordion-body {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s ease;
+    }
+
+    .ime-accordion-item.ime-active .ime-accordion-body {
+        max-height: 5000px; /* Suficiente para tabelas grandes */
+    }
+
+    .ime-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+    }
+
+    .ime-table th, .ime-table td {
+        padding: 12px 20px;
+        text-align: left;
+        border-top: 1px solid #e2e8f0;
+        font-size: 14px;
+    }
+
+    .ime-table th {
+        background-color: #ffffff;
+        color: #475569;
+        font-weight: 600;
+    }
+
+    .ime-table tr:hover td {
+        background-color: #f8fafc;
+    }
+
+    /* CSS Exclusivo para Impressão/PDF */
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        
+        .ime-comissao-container, .ime-comissao-container * {
+            visibility: visible;
+        }
+        
+        .ime-comissao-container {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            margin: 0;
+        }
+        
+        .ime-toolbar {
+            display: none !important;
+        }
+        
+        .ime-accordion-body {
+            max-height: none !important;
+            overflow: visible !important;
+        }
+        
+        .ime-accordion-header::after {
+            display: none !important;
+        }
+        
+        .ime-accordion-item {
+            border: none;
+            border-bottom: 2px solid #000;
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+        }
+        
+        .ime-table th, .ime-table td {
+            border: 1px solid #ccc;
+        }
+    }
+</style>
+
+<div class="ime-comissao-container" id="ime-print-area">
+    
+    <div class="ime-toolbar">
+        <button class="ime-btn-pdf" onclick="imePrint()">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H4zm0 1h8a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z"/>
+              <path d="M4.603 12.087a.81.81 0 0 1-.438-.42c-.195-.388-.13-.776.08-1.102.198-.307.526-.568.897-.787a7.68 7.68 0 0 1 1.482-.645 19.701 19.701 0 0 0 1.062-2.227 7.269 7.269 0 0 1-.43-1.295c-.086-.4-.119-.796-.046-1.136.075-.354.274-.672.65-.823.192-.077.4-.12.602-.077a.7.7 0 0 1 .471.242c.182.251.28.667.14 1.155a5.32 5.32 0 0 1-.295.736c.068.27.155.54.262.808.2.502.43 1.026.684 1.536.27.533.56 1.05.86 1.554a8.625 8.625 0 0 1 1.705.897c.312.234.56.55.67.925.108.368.046.804-.214 1.109a.86.86 0 0 1-.424.263c-.15.034-.344.05-.595-.035-.25-.084-.514-.265-.778-.544a4.137 4.137 0 0 1-.617-.834 19.344 19.344 0 0 1-1.332-.71c-.551.355-1.109.68-1.637.95-1.077.55-1.928.897-2.38.995a.89.89 0 0 1-.36-.008zm.273-1.042c.16.113.344.155.513.155.336 0 .692-.163 1.14-.403a20.086 20.086 0 0 1-1.667-.655c-.206.183-.352.378-.44.577-.075.168-.07.336-.015.485l.47-.159zm1.187-1.44c.48.204 1.058.4 1.724.581a17.37 17.37 0 0 0 1.258-.802c-.521-.49-1.018-1.02-1.488-1.583a18.665 18.665 0 0 0-.71 1.341c-.247.531-.492 1.066-.784 1.463zm3.564-4.88c.074.225.127.466.155.719a9.61 9.61 0 0 0 .153-1.182c.007-.156-.035-.262-.1-.318-.088-.076-.25-.06-.39.06-.118.102-.2.247-.233.407-.03.14-.027.291.015.426.046.14.12.274.212.392a4.437 4.437 0 0 0 .188-.504zm2.148 3.535a9.07 9.07 0 0 0-1.554-.803 17.294 17.294 0 0 0 1.254 1.633c.31.29.566.495.734.589.155.087.292.112.4.088.086-.019.144-.067.172-.11.027-.043.033-.102.016-.164-.024-.09-.092-.2-.234-.337-.175-.17-.417-.384-.788-.896z"/>
+            </svg>
+            Salvar em PDF
+        </button>
+    </div>
+
+    {% for comissao in comissoes %}
+    <div class="ime-accordion-item">
+        <div class="ime-accordion-header" onclick="this.parentElement.classList.toggle('ime-active')">
+            {{ comissao.nome }}
+        </div>
+        <div class="ime-accordion-body">
+            {% if comissao.membros and comissao.membros|length > 0 %}
+            <table class="ime-table">
+                <thead>
+                    <tr>
+                        <th width="45%">Nome</th>
+                        <th width="25%">Cargo / Categoria</th>
+                        <th width="30%">Mandato</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for membro in comissao.membros %}
+                    <tr>
+                        <td><strong>{{ membro.nome }}</strong></td>
+                        <td><span style="display:inline-block; padding:2px 8px; background:#f1f5f9; border-radius:12px; font-size:12px; color:#475569;">{{ membro.cargo }}</span></td>
+                        <td>{{ membro.periodo }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div style="padding: 20px; text-align: center; color: #64748b;">
+                <p>Nenhum membro registrado para este colegiado.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div style="padding: 20px; border: 1px solid #e2e8f0; border-radius: 6px; text-align: center; background: #fff;">
+        <p>Nenhuma comissão ou colegiado cadastrado no sistema.</p>
+    </div>
+    {% endfor %}
+
+</div>
+
+<script>
+    function imePrint() {
+        // Expandir todos os accordions temporariamente para a impressão
+        const items = document.querySelectorAll('.ime-accordion-item');
+        items.forEach(item => item.classList.add('ime-active'));
+        
+        // Dispara a impressão do navegador
+        window.print();
+    }
+</script>
