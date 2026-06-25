@@ -9,16 +9,12 @@ router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/comissoes/html", response_class=HTMLResponse)
-async def get_comissoes_html(request: Request, id: str = None, ids: str = None, tipo: str = None, db: Session = Depends(get_db)):
+async def get_comissoes_html(request: Request, ids: str = None, tipo: str = None, db: Session = Depends(get_db)):
     """Retorna o HTML formatado para ser injetado no WordPress"""
     query = db.query(models.Comissao)
     
-    is_single_open = False
-    
-    if id and id.strip().isdigit():
-        query = query.filter(models.Comissao.id == int(id.strip()))
-        is_single_open = True
-    elif ids:
+    id_list = []
+    if ids:
         id_list = [int(i.strip()) for i in ids.split(",") if i.strip().isdigit()]
         if id_list:
             query = query.filter(models.Comissao.id.in_(id_list))
@@ -27,10 +23,27 @@ async def get_comissoes_html(request: Request, id: str = None, ids: str = None, 
         query = query.filter(models.Comissao.categoria == tipo.strip())
         
     comissoes = query.all()
+    
+    # Respeitar a ordem dos IDs passados
+    if id_list:
+        comissoes.sort(key=lambda x: id_list.index(x.id) if x.id in id_list else 999)
+        
     return templates.TemplateResponse("public/comissao.html", {
         "request": request,
         "comissoes": comissoes,
-        "is_single_open": is_single_open
+        "is_single_open": False
+    })
+
+@router.get("/comissao/{id}/html", response_class=HTMLResponse)
+async def get_comissao_single_html(request: Request, id: int, db: Session = Depends(get_db)):
+    """Retorna o HTML formatado para uma única comissão, já expandida"""
+    comissao = db.query(models.Comissao).filter(models.Comissao.id == id).first()
+    comissoes = [comissao] if comissao else []
+    
+    return templates.TemplateResponse("public/comissao.html", {
+        "request": request,
+        "comissoes": comissoes,
+        "is_single_open": True
     })
 
 @router.get("/comissoes", response_class=JSONResponse)

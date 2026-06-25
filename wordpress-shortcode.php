@@ -11,9 +11,29 @@ if (!defined('ABSPATH')) {
 }
 
 function ime_comissoes_shortcode($atts) {
-    // Configura a URL da API FastAPI (mudar localhost se o WordPress estiver em outro servidor)
-    // O FastAPI roda na porta 8020 de acordo com o docker-compose
+    $a = shortcode_atts(array(
+        'id'   => '',
+        'ids'  => '',
+        'tipo' => ''
+    ), $atts);
+
     $api_url = 'http://localhost:8020/api/comissoes/html';
+    $query_args = array();
+
+    if (!empty($a['id'])) {
+        $id = sanitize_text_field($a['id']);
+        $api_url = "http://localhost:8020/api/comissao/{$id}/html";
+    } else {
+        if (!empty($a['ids'])) {
+            $query_args['ids'] = sanitize_text_field($a['ids']);
+        }
+        if (!empty($a['tipo'])) {
+            $query_args['tipo'] = sanitize_text_field($a['tipo']);
+        }
+        if (!empty($query_args)) {
+            $api_url = add_query_arg($query_args, $api_url);
+        }
+    }
 
     // Faz a requisição HTTP para a API
     $response = wp_remote_get($api_url, array(
