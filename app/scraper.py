@@ -8,6 +8,14 @@ from playwright.async_api import async_playwright, TimeoutError as PlaywrightTim
 
 logger = logging.getLogger(__name__)
 
+# Variável global para rastrear o progresso da extração
+scrape_progress = {
+    "is_running": False,
+    "total": 0,
+    "current": 0,
+    "message": ""
+}
+
 CACHE_DIR = os.getenv("CACHE_DIR", "./data/cache_comissoes")
 os.makedirs(CACHE_DIR, exist_ok=True)
 
@@ -180,35 +188,53 @@ async def scrape_comissao(url: str, use_cache_on_fail: bool = True) -> dict:
 
 # Função auxiliar para o update_all_comissoes que será chamado pelo APScheduler / rota administrativa
 async def update_all_comissoes(db):
+    global scrape_progress
     from . import models
     from datetime import datetime
     
     comissoes = db.query(models.Comissao).all()
-    for comissao in comissoes:
-        logger.info(f"Atualizando: {comissao.nome} - {comissao.url}")
-        
-        # Chama a função de scraping
-        data_json = await scrape_comissao(comissao.url)
-        
-        if data_json.get("secoes"):
-            # Remove membros antigos
-            db.query(models.Membro).filter(models.Membro.comissao_id == comissao.id).delete()
+    
+    scrape_progress["is_running"] = True
+    scrape_progress["total"] = len(comissoes)
+    scrape_progress["current"] = 0
+    scrape_progress["message"] = "Iniciando scraper..."
+    
+    try:
+        for comissao in comissoes:
+            scrape_progress["message"] = f"Acessando portal da USP: {comissao.nome}"
+            logger.info(f"Atualizando: {comissao.nome} - {comissao.url}")
             
-            # Insere novos
-            for secao in data_json["secoes"]:
-                categoria_nome = secao.get("nome", "Geral")
+            # Chama a função de scraping
+            data_json = await scrape_comissao(comissao.url)
+            
+            if data_json.get("secoes"):
+                # Remove membros antigos
+                db.query(models.Membro).filter(models.Membro.comissao_id == comissao.id).delete()
                 
-                for membro_dict in secao.get("membros", []):
-                    periodo_str = f"{membro_dict.get('inicio_mandato', '')} - {membro_dict.get('fim_mandato', '')}".strip(" -")
+                # Insere novos
+                for secao in data_json["secoes"]:
+                    categoria_nome = secao.get("nome", "Geral")
                     
-                    novo_membro = models.Membro(
-                        comissao_id=comissao.id,
-                        nome=membro_dict.get("nome", ""),
-                        cargo=membro_dict.get("cargo_real", categoria_nome),
-                        periodo=periodo_str
-                    )
-                    db.add(novo_membro)
+                    for membro_dict in secao.get("membros", []):
+                        periodo_str = f"{membro_dict.get('inicio_mandato', '')} - {membro_dict.get('fim_mandato', '')}".strip(" -")
+                        
+                        novo_membro = models.Membro(
+                            comissao_id=comissao.id,
+                            nome=membro_dict.get("nome", ""),
+                            cargo=membro_dict.get("cargo_real", categoria_nome),
+                            periodo=periodo_str
+                        )
+                        db.add(novo_membro)
+                
+                comissao.data_atualizacao = datetime.utcnow()
+                db.commit()
+                logger.info(f"Comissão {comissao.nome} salva no DB com sucesso.")
             
-            comissao.data_atualizacao = datetime.utcnow()
-            db.commit()
-            logger.info(f"Comissão {comissao.nome} salva no DB com sucesso.")
+            scrape_progress["current"] += 1
+            
+    except Exception as e:
+        logger.error(f"Erro no processamento geral: {e}")
+        scrape_progress["message"] = f"Erro: {str(e)}"
+    finally:
+        scrape_progress["is_running"] = False
+        scrape_progress["message"] = "Atualização concluída com sucesso!"

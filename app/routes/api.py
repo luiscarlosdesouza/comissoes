@@ -9,18 +9,44 @@ router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/comissoes/html", response_class=HTMLResponse)
-async def get_comissoes_html(request: Request, db: Session = Depends(get_db)):
+async def get_comissoes_html(request: Request, id: str = None, ids: str = None, tipo: str = None, db: Session = Depends(get_db)):
     """Retorna o HTML formatado para ser injetado no WordPress"""
-    comissoes = db.query(models.Comissao).all()
+    query = db.query(models.Comissao)
+    
+    is_single_open = False
+    
+    if id and id.strip().isdigit():
+        query = query.filter(models.Comissao.id == int(id.strip()))
+        is_single_open = True
+    elif ids:
+        id_list = [int(i.strip()) for i in ids.split(",") if i.strip().isdigit()]
+        if id_list:
+            query = query.filter(models.Comissao.id.in_(id_list))
+            
+    if tipo:
+        query = query.filter(models.Comissao.categoria == tipo.strip())
+        
+    comissoes = query.all()
     return templates.TemplateResponse("public/comissao.html", {
         "request": request,
-        "comissoes": comissoes
+        "comissoes": comissoes,
+        "is_single_open": is_single_open
     })
 
 @router.get("/comissoes", response_class=JSONResponse)
-async def list_comissoes_json(db: Session = Depends(get_db)):
-    """Retorna a lista de comissões em formato JSON"""
-    comissoes = db.query(models.Comissao).all()
+async def list_comissoes_json(ids: str = None, tipo: str = None, db: Session = Depends(get_db)):
+    """Retorna a lista de comissões em formato JSON com filtros opcionais"""
+    query = db.query(models.Comissao)
+    
+    if ids:
+        id_list = [int(i.strip()) for i in ids.split(",") if i.strip().isdigit()]
+        if id_list:
+            query = query.filter(models.Comissao.id.in_(id_list))
+            
+    if tipo:
+        query = query.filter(models.Comissao.categoria == tipo.strip())
+        
+    comissoes = query.all()
     resultado = []
     
     for c in comissoes:
@@ -29,6 +55,7 @@ async def list_comissoes_json(db: Session = Depends(get_db)):
             "id": c.id,
             "nome": c.nome,
             "url": c.url,
+            "categoria": c.categoria,
             "data_atualizacao": c.data_atualizacao.isoformat() if c.data_atualizacao else None,
             "membros": membros
         })

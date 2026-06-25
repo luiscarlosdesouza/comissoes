@@ -14,9 +14,32 @@ if (!defined('ABSPATH')) {
  * Função principal do shortcode [comissoes_ime]
  */
 function ime_comissoes_shortcode_render($atts) {
+    // Processa os atributos do shortcode
+    $a = shortcode_atts(array(
+        'id'   => '',
+        'ids'  => '',
+        'tipo' => ''
+    ), $atts);
+
     // Configura a URL da API FastAPI (Mude caso a API não esteja no mesmo servidor do WP)
     // O endpoint /html já retorna o layout limpo, com accordion e CSS isolado (classes ime-)
     $api_url = 'http://localhost:8020/api/comissoes/html';
+
+    // Constrói os query parameters baseados nos atributos fornecidos
+    $query_args = array();
+    if (!empty($a['id'])) {
+        $query_args['id'] = sanitize_text_field($a['id']);
+    } elseif (!empty($a['ids'])) {
+        $query_args['ids'] = sanitize_text_field($a['ids']);
+    }
+    
+    if (!empty($a['tipo'])) {
+        $query_args['tipo'] = sanitize_text_field($a['tipo']);
+    }
+    
+    if (!empty($query_args)) {
+        $api_url = add_query_arg($query_args, $api_url);
+    }
 
     // Tenta buscar usando a API nativa do WordPress
     $response = wp_remote_get($api_url, array(

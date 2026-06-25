@@ -14,17 +14,74 @@
     </div>
 
     <div class="w-full md:w-2/3">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-bold text-gray-800">Comissões Cadastradas</h2>
-            <form action="/admin/force_update_all" method="POST" class="inline">
-                <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded shadow transition">
-                    Atualizar Todas
-                </button>
-            </form>
+        <div class="flex flex-col mb-4">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-2xl font-bold text-gray-800">Comissões Cadastradas</h2>
+                
+                <form action="/admin/force_update_all" method="POST" class="inline" id="btn-update-all" onsubmit="startProgressUI()">
+                    <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded shadow transition">
+                        Atualizar Todas
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Barra de Progresso Oculta por padrão -->
+            <div id="progress-container" class="hidden w-full bg-gray-200 rounded-full h-4 dark:bg-gray-700 mt-2">
+                <div id="progress-bar" class="bg-blue-600 h-4 rounded-full transition-all duration-300" style="width: 0%"></div>
+                <p id="progress-text" class="text-xs text-gray-500 mt-1">Iniciando...</p>
+            </div>
         </div>
         
         {% include "admin/comissao_list.html" %}
     </div>
     
 </div>
+
+<script>
+    const progressContainer = document.getElementById('progress-container');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    const btnUpdateAll = document.getElementById('btn-update-all');
+
+    function startProgressUI() {
+        if(btnUpdateAll) btnUpdateAll.classList.add('hidden');
+        if(progressContainer) progressContainer.classList.remove('hidden');
+    }
+
+    async function checkProgress() {
+        try {
+            const res = await fetch('/admin/progress');
+            if (!res.ok) return;
+            const data = await res.json();
+            
+            if (data.is_running) {
+                if(btnUpdateAll) btnUpdateAll.classList.add('hidden');
+                if(progressContainer) progressContainer.classList.remove('hidden');
+                
+                let pct = 0;
+                if (data.total > 0) {
+                    pct = Math.round((data.current / data.total) * 100);
+                }
+                
+                if(progressBar) progressBar.style.width = pct + '%';
+                if(progressText) progressText.innerText = data.message + ` (${data.current}/${data.total}) - ${pct}%`;
+            } else {
+                if (progressContainer && !progressContainer.classList.contains('hidden') && data.current > 0 && data.current >= data.total) {
+                    if(progressText) progressText.innerText = "Atualização concluída! Recarregando...";
+                    if(progressBar) {
+                        progressBar.style.width = '100%';
+                        progressBar.classList.remove('bg-blue-600');
+                        progressBar.classList.add('bg-green-500');
+                    }
+                    setTimeout(() => window.location.reload(), 1500);
+                }
+            }
+        } catch(e) {
+            console.error(e);
+        }
+    }
+
+    setInterval(checkProgress, 1000);
+    checkProgress();
+</script>
 {% endblock %}

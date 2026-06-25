@@ -9,6 +9,7 @@ class Comissao(Base):
     id = Column(Integer, primary_key=True, index=True)
     nome = Column(String, index=True)
     url = Column(String)
+    categoria = Column(String, default="mais-comissoes", index=True)
     data_atualizacao = Column(DateTime, default=datetime.utcnow)
     
     membros = relationship("Membro", back_populates="comissao", cascade="all, delete-orphan")

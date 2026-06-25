@@ -1,12 +1,12 @@
 import os
 import asyncio
 from fastapi import APIRouter, Depends, Request, Form, status, BackgroundTasks
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app import models
-from app.scraper import update_all_comissoes, scrape_comissao
+from app.scraper import update_all_comissoes, scrape_comissao, scrape_progress
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -119,3 +119,9 @@ async def force_update_single(request: Request, comissao_id: int, db: Session = 
         "comissoes": db.query(models.Comissao).all(),
         "message": f"Atualização da comissão {comissao.nome} iniciada em background."
     })
+
+@router.get("/progress")
+def get_progress(request: Request):
+    if request.cookies.get("session") != "authenticated":
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    return JSONResponse(scrape_progress)
