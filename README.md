@@ -1,36 +1,76 @@
 # Microsserviço de Comissões e Colegiados USP
 
-Este é um microsserviço desenvolvido em Python (FastAPI) para extrair, armazenar e disponibilizar os dados de comissões e colegiados da USP para um site WordPress.
+Este é um microsserviço desenvolvido em Python (FastAPI) para automatizar o web scraping, armazenar dados e disponibilizar listas de comissões e colegiados da USP para um site WordPress (ou outras plataformas).
 
 ## Tecnologias Utilizadas
 
-- **FastAPI**: Framework web principal.
-- **Jinja2**: Motor de templates para a área administrativa e renderização do HTML exportado.
-- **Playwright**: Utilizado para o Web Scraping nas páginas (Vue.js/SPAs) da USP.
-- **SQLite + SQLAlchemy**: Banco de dados e ORM.
-- **APScheduler**: Agendamento de tarefas (scraping na madrugada).
-- **Docker**: Containerização.
+- **FastAPI**: Framework web principal da API.
+- **Jinja2**: Motor de templates para a área administrativa e renderização do HTML dinâmico.
+- **Playwright**: Responsável pelo Web Scraping nas páginas (Vue.js/SPAs) da USP.
+- **SQLite + SQLAlchemy**: Banco de dados e ORM para persistência dos dados.
+- **APScheduler**: Agendamento de tarefas (scraping diário em background).
+- **Docker**: Containerização completa da solução.
 
-## Como Executar
+## Como Realizar o Deploy
 
-1. Copie o arquivo de configuração e edite se necessário:
+1. Clone o repositório no seu servidor (produção/homologação):
+   ```bash
+   git clone https://github.com/luiscarlosdesouza/comissoes.git
+   cd comissoes
+   ```
+
+2. Copie o arquivo de configuração e edite as credenciais de segurança e fuso horário:
    ```bash
    cp .env.example .env
    ```
 
-2. Suba a aplicação via Docker:
+3. Suba a aplicação (API e Scraper) via Docker:
    ```bash
-   docker-compose up -d --build
+   docker compose up -d --build
    ```
 
-3. Acesse a Área Administrativa:
-   - **URL:** `http://localhost:8020/admin/login`
-   - **Credenciais padrão:** `admin` / `adminusp` (ou o que você configurou no `.env`).
+4. Crie o Banco de Dados inicial preenchendo as 47 comissões padrão e suas categorias (leitura do CSV base):
+   ```bash
+   docker compose exec web python app/seed.py
+   ```
 
-## Integração com WordPress
+## Área Administrativa
 
-A integração é feita utilizando o arquivo `wordpress-shortcode.php` que contém o shortcode `[ime_comissoes]`. Este shortcode consome a API que roda em `http://localhost:8020/api/comissoes/html` e injeta a visualização em formato accordion na sua página.
+- **URL:** `http://SEU-IP:8020/admin/login`
+- **Credenciais padrão:** Baseadas no seu arquivo `.env` (Padrão: `admin` / `adminusp`).
+- No Dashboard Administrativo, você pode acompanhar o status da atualização (com barra de progresso visual), forçar a extração de dados e visualizar comissões individualmente.
 
-## Personalizando o Web Scraping
+## Integração e Uso no WordPress
 
-Você deverá acessar o arquivo `app/scraper.py` e ajustar os seletores (`query_selector_all` etc.) de acordo com a estrutura e as classes CSS exatas das páginas Vue.js que hospedam os dados reais das comissões na USP.
+A integração com o WordPress é feita via um shortcode altamente customizável criado no arquivo `wordpress-shortcode.php`. Após instalá-lo como plugin ou copiar seu conteúdo para o `functions.php` do seu tema, você poderá utilizar o shortcode `[ime_comissoes]` das seguintes maneiras:
+
+### 1. Todas as Comissões (Padrão)
+```text
+[ime_comissoes]
+```
+> Retorna todas as comissões do sistema no formato **Accordion** retrátil.
+
+### 2. Filtro por Categoria
+```text
+[ime_comissoes tipo="conselhos-departamento"]
+```
+> Exibe as comissões apenas da categoria solicitada (ex: `orgaos-colegiados`, `conselhos-departamento`, `cursos-graduacao`, `programas-posgraduacao`).
+
+### 3. Filtro de Múltiplos IDs Específicos
+```text
+[ime_comissoes ids="13,14,15,16"]
+```
+> Exibe um bloco de accordion contendo apenas as comissões selecionadas por ID, **respeitando estritamente a ordem em que você as digitou** (ex: primeiro o ID 13, depois o 14).
+
+### 4. Visão Expandida de Comissão Única
+```text
+[ime_comissoes id="14"]
+```
+> Exibe a comissão específica já totalmente aberta (sem o estilo accordion). Ideal para injetar dados em páginas exclusivas (ex: a página fixa da Congregação).
+
+## Endpoints da API para Desenvolvedores
+
+Caso queira integrar em outros lugares, a API expõe os seguintes endpoints principais:
+- `GET /api/comissoes`: Retorna todas as comissões (com membros e categorias) em formato estrito **JSON**. (Suporta parâmetros `?ids=` e `?tipo=`)
+- `GET /api/comissoes/html`: Retorna o HTML pré-formatado das comissões. (Suporta parâmetros `?ids=` e `?tipo=`)
+- `GET /api/comissao/{id}/html`: Retorna o HTML de uma única comissão já na visão expandida.
