@@ -8,6 +8,10 @@ from playwright.async_api import async_playwright, TimeoutError as PlaywrightTim
 
 logger = logging.getLogger(__name__)
 
+# Semáforo para limitar o número de instâncias concorrentes do Playwright/Chrome
+# Isso evita a saturação de CPU/Memória (load average alto) no servidor
+browser_semaphore = asyncio.Semaphore(3)
+
 # Variável global para rastrear o progresso da extração
 scrape_progress = {
     "is_running": False,
@@ -133,39 +137,45 @@ async def scrape_comissao(url: str, use_cache_on_fail: bool = True) -> dict:
         logger.info(f"Scraping {url} (Tentativa {attempt}/{max_retries})...")
         
         try:
-            async with async_playwright() as p:
-                browser = await p.chromium.launch(
-                    headless=True,
-                    args=["--no-sandbox", "--disable-setuid-sandbox"]
-                )
-                
-                context = await browser.new_context(
-                    viewport={'width': 1280, 'height': 800},
-                    user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                )
-                
-                page = await context.new_page()
-                
-                # Aguarda até que a rede fique ociosa (networkidle) - Ideal para SPAs (Vue.js)
-                await page.goto(url, wait_until="networkidle", timeout=30000)
-                
-                # Aguarda um elemento chave do Vue ser renderizado (substitua '#app' se necessário)
-                # await page.wait_for_selector('#app', timeout=10000)
-                
-                # Adiciona um pequeno delay para garantir que animações e montagens do Vue finalizaram
-                await page.wait_for_timeout(2000) 
-                
-                extracted_data = await _extract_data(page)
-                
-                await browser.close()
-                
-                if extracted_data and extracted_data.get('titulo') or extracted_data.get('secoes'):
-                    logger.info(f"Sucesso ao raspar {url}")
-                    # Salva no cache
-                    save_cache(url, extracted_data)
-                    return extracted_data
-                else:
-                    logger.warning(f"Nenhum dado encontrado na tentativa {attempt}.")
+            # Controla a concorrência limitando o número de browsers abertos simultaneamente
+            async with browser_semaphore:
+                async with async_playwright() as p:
+                    browser = await p.chromium.launch(
+                        headless=True,
+                        args=["--no-sandbox", "--disable-setuid-sandbox"]
+                    )
+                    
+                    try:
+                        context = await browser.new_context(
+                            viewport={'width': 1280, 'height': 800},
+                            user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                        )
+                        
+                        page = await context.new_page()
+                        
+                        # Aguarda até que a rede fique ociosa (networkidle) - Ideal para SPAs (Vue.js)
+                        await page.goto(url, wait_until="networkidle", timeout=30000)
+                        
+                        # Aguarda um elemento chave do Vue ser renderizado (substitua '#app' se necessário)
+                        # await page.wait_for_selector('#app', timeout=10000)
+                        
+                        # Adiciona um pequeno delay para garantir que animações e montagens do Vue finalizaram
+                        await page.wait_for_timeout(2000) 
+                        
+                        extracted_data = await _extract_data(page)
+                    finally:
+                        # Garante que o processo do browser sempre será encerrado, 
+                        # mesmo que ocorra TimeoutError ou qualquer outra exceção no meio da execução.
+                        # Isso previne o acúmulo de processos zumbis ([chrome] <defunct>).
+                        await browser.close()
+                    
+                    if extracted_data and (extracted_data.get('titulo') or extracted_data.get('secoes')):
+                        logger.info(f"Sucesso ao raspar {url}")
+                        # Salva no cache
+                        save_cache(url, extracted_data)
+                        return extracted_data
+                    else:
+                        logger.warning(f"Nenhum dado encontrado na tentativa {attempt}.")
                     
         except PlaywrightTimeoutError:
             logger.error(f"Timeout ao carregar a página {url} na tentativa {attempt}.")
