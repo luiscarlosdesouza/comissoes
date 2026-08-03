@@ -38,14 +38,15 @@ async def logout():
     return response
 
 @router.get("/dashboard", response_class=HTMLResponse)
-async def dashboard(request: Request, db: Session = Depends(get_db)):
+async def dashboard(request: Request, message: str = None, db: Session = Depends(get_db)):
     if not check_auth(request):
         return RedirectResponse(url="/admin/login", status_code=status.HTTP_302_FOUND)
     
     comissoes = db.query(models.Comissao).all()
     return templates.TemplateResponse("admin/dashboard.html", {
         "request": request,
-        "comissoes": comissoes
+        "comissoes": comissoes,
+        "message": message
     })
 
 @router.post("/comissao/add")
@@ -119,6 +120,43 @@ async def force_update_single(request: Request, comissao_id: int, db: Session = 
         "comissoes": db.query(models.Comissao).all(),
         "message": f"Atualização da comissão {comissao.nome} iniciada em background."
     })
+
+@router.get("/comissao/edit/{comissao_id}", response_class=HTMLResponse)
+async def edit_comissao_get(request: Request, comissao_id: int, db: Session = Depends(get_db)):
+    if not check_auth(request):
+        return RedirectResponse(url="/admin/login", status_code=status.HTTP_302_FOUND)
+    
+    comissao = db.query(models.Comissao).filter(models.Comissao.id == comissao_id).first()
+    if not comissao:
+        return RedirectResponse(url="/admin/dashboard?message=Comissao+nao+encontrada", status_code=status.HTTP_302_FOUND)
+        
+    return templates.TemplateResponse("admin/comissao_edit.html", {
+        "request": request,
+        "comissao": comissao
+    })
+
+@router.post("/comissao/edit/{comissao_id}")
+async def edit_comissao_post(
+    request: Request, 
+    comissao_id: int, 
+    nome: str = Form(...), 
+    url: str = Form(...), 
+    categoria: str = Form(...), 
+    db: Session = Depends(get_db)
+):
+    if not check_auth(request):
+        return RedirectResponse(url="/admin/login", status_code=status.HTTP_302_FOUND)
+        
+    comissao = db.query(models.Comissao).filter(models.Comissao.id == comissao_id).first()
+    if not comissao:
+        return RedirectResponse(url="/admin/dashboard?message=Comissao+nao+encontrada", status_code=status.HTTP_302_FOUND)
+        
+    comissao.nome = nome
+    comissao.url = url
+    comissao.categoria = categoria
+    db.commit()
+    
+    return RedirectResponse(url=f"/admin/dashboard?message=Comissao+{comissao.nome}+atualizada+com+sucesso", status_code=status.HTTP_302_FOUND)
 
 @router.get("/progress")
 def get_progress(request: Request):

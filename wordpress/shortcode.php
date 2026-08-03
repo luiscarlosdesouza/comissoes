@@ -16,9 +16,10 @@ if (!defined('ABSPATH')) {
 function ime_comissoes_shortcode_render($atts) {
     // Processa os atributos do shortcode
     $a = shortcode_atts(array(
-        'id'   => '',
-        'ids'  => '',
-        'tipo' => ''
+        'id'     => '',
+        'ids'    => '',
+        'tipo'   => '',
+        'layout' => 'acordeon'
     ), $atts);
 
     // Configura a URL da API FastAPI (Mude caso a API não esteja no mesmo servidor do WP)
@@ -28,13 +29,19 @@ function ime_comissoes_shortcode_render($atts) {
     // Constrói os query parameters baseados nos atributos fornecidos
     $query_args = array();
     if (!empty($a['id'])) {
-        $query_args['id'] = sanitize_text_field($a['id']);
-    } elseif (!empty($a['ids'])) {
-        $query_args['ids'] = sanitize_text_field($a['ids']);
+        $id = sanitize_text_field($a['id']);
+        $api_url = "http://localhost:8020/api/comissao/{$id}/html";
+    } else {
+        if (!empty($a['ids'])) {
+            $query_args['ids'] = sanitize_text_field($a['ids']);
+        }
+        if (!empty($a['tipo'])) {
+            $query_args['tipo'] = sanitize_text_field($a['tipo']);
+        }
     }
     
-    if (!empty($a['tipo'])) {
-        $query_args['tipo'] = sanitize_text_field($a['tipo']);
+    if (!empty($a['layout'])) {
+        $query_args['layout'] = sanitize_text_field($a['layout']);
     }
     
     if (!empty($query_args)) {

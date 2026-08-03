@@ -163,12 +163,12 @@
     </div>
 
     {% for comissao in comissoes %}
-    {% if is_single_open %}
+    {% if layout == 'plano' %}
     <div class="ime-single-item" style="margin-bottom: 20px; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 16px;">
         <h3 style="color: #334155; font-size: 18px; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-top: 0; margin-bottom: 16px;">{{ comissao.nome }}</h3>
         <div class="ime-single-body">
     {% else %}
-    <div class="ime-accordion-item">
+    <div class="ime-accordion-item{% if layout == 'acordeon-aberto' %} ime-active{% endif %}">
         <div class="ime-accordion-header" onclick="this.parentElement.classList.toggle('ime-active')">
             {{ comissao.nome }}
         </div>
@@ -200,7 +200,7 @@
             </div>
             {% endif %}
             
-    {% if is_single_open %}
+    {% if layout == 'plano' %}
         </div>
     </div>
     {% else %}

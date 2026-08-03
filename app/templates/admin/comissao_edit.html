@@ -1,0 +1,72 @@
+{% extends "admin/base.html" %}
+
+{% block nav_items %}
+<div class="flex gap-4">
+    <a href="/admin/dashboard" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm transition">Voltar ao Dashboard</a>
+    <a href="/admin/logout" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded text-sm transition">Sair</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md border border-gray-200 mt-6">
+    <h2 class="text-2xl font-bold text-gray-800 border-b pb-4 mb-6">Editar Colegiado / Comissão</h2>
+    
+    <form action="/admin/comissao/edit/{{ comissao.id }}" method="POST" class="flex flex-col gap-6">
+        <div>
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="nome">Nome do Colegiado / Comissão</label>
+            <input 
+                type="text" 
+                id="nome" 
+                name="nome" 
+                value="{{ comissao.nome }}" 
+                required 
+                class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                placeholder="Ex: Comissão de Graduação"
+            >
+        </div>
+        
+        <div>
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="url">URL (Portal USP Vue.js)</label>
+            <input 
+                type="url" 
+                id="url" 
+                name="url" 
+                value="{{ comissao.url }}" 
+                required 
+                class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                placeholder="https://..."
+            >
+        </div>
+        
+        <div>
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="categoria">Categoria / Tipo</label>
+            <select 
+                id="categoria" 
+                name="categoria" 
+                class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm bg-white"
+            >
+                <option value="orgaos-colegiados" {% if comissao.categoria == 'orgaos-colegiados' %}selected{% endif %}>Órgãos Colegiados (CCEx, CG, CPG, CTA, CIPA, etc.)</option>
+                <option value="conselhos-departamento" {% if comissao.categoria == 'conselhos-departamento' %}selected{% endif %}>Conselhos de Departamento (MAC, MAE, MAP, MAT)</option>
+                <option value="cursos-graduacao" {% if comissao.categoria == 'cursos-graduacao' %}selected{% endif %}>Cursos de Graduação (COC)</option>
+                <option value="programas-posgraduacao" {% if comissao.categoria == 'programas-posgraduacao' %}selected{% endif %}>Programas de Pós-Graduação (CCP)</option>
+                <option value="mais-comissoes" {% if comissao.categoria == 'mais-comissoes' %}selected{% endif %}>Mais Comissões (Outras)</option>
+            </select>
+        </div>
+        
+        <div class="flex items-center justify-end gap-4 border-t pt-4 mt-2">
+            <a 
+                href="/admin/dashboard" 
+                class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 px-5 rounded transition text-sm"
+            >
+                Cancelar
+            </a>
+            <button 
+                type="submit" 
+                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded transition text-sm shadow-md"
+            >
+                Salvar Alterações
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

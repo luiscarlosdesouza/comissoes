@@ -9,7 +9,7 @@ router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/comissoes/html", response_class=HTMLResponse)
-async def get_comissoes_html(request: Request, ids: str = None, tipo: str = None, db: Session = Depends(get_db)):
+async def get_comissoes_html(request: Request, ids: str = None, tipo: str = None, layout: str = "acordeon", db: Session = Depends(get_db)):
     """Retorna o HTML formatado para ser injetado no WordPress"""
     query = db.query(models.Comissao)
     
@@ -31,11 +31,11 @@ async def get_comissoes_html(request: Request, ids: str = None, tipo: str = None
     return templates.TemplateResponse("public/comissao.html", {
         "request": request,
         "comissoes": comissoes,
-        "is_single_open": False
+        "layout": layout
     })
 
 @router.get("/comissao/{id}/html", response_class=HTMLResponse)
-async def get_comissao_single_html(request: Request, id: int, db: Session = Depends(get_db)):
+async def get_comissao_single_html(request: Request, id: int, layout: str = "plano", db: Session = Depends(get_db)):
     """Retorna o HTML formatado para uma única comissão, já expandida"""
     comissao = db.query(models.Comissao).filter(models.Comissao.id == id).first()
     comissoes = [comissao] if comissao else []
@@ -43,7 +43,7 @@ async def get_comissao_single_html(request: Request, id: int, db: Session = Depe
     return templates.TemplateResponse("public/comissao.html", {
         "request": request,
         "comissoes": comissoes,
-        "is_single_open": True
+        "layout": layout
     })
 
 @router.get("/comissoes", response_class=JSONResponse)

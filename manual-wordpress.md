@@ -137,6 +137,23 @@ Exemplos de categorias possíveis:
 
 ---
 
+### 6.5 Personalizar o estilo/estado visual (Sanfona ou Plano)
+
+Você pode passar o parâmetro `layout` para forçar o estilo ou estado inicial das comissões:
+
+- **`layout="acordeon"`** (Padrão para listas): Mantém os blocos em modo sanfona fechado por padrão.
+- **`layout="acordeon-aberto"`**: Mantém os blocos em modo sanfona, porém pré-abertos na carga da página (permitindo o clique para fechar).
+- **`layout="plano"`** (Padrão para comissão única): Exibe a tabela diretamente sem cabeçalhos interativos ou comportamento sanfona.
+
+Exemplos:
+```text
+[ime_comissoes tipo="orgaos-colegiados" layout="acordeon-aberto"]
+[ime_comissoes id="14" layout="plano"]
+[ime_comissoes ids="13,14" layout="acordeon"]
+```
+
+---
+
 ## 7. Como organizar a página em blocos
 
 Se você quiser montar a página com seções separadas, a forma mais prática é usar:
@@ -393,10 +410,13 @@ Uma organização simples e eficiente seria:
 
 | Objetivo | Shortcode |
 |---|---|
-| Todas as comissões | `[ime_comissoes]` |
-| Uma comissão | `[ime_comissoes id="14"]` |
-| Várias comissões | `[ime_comissoes ids="13,14,15"]` |
-| Por categoria | `[ime_comissoes tipo="conselhos-departamento"]` |
+| Todas as comissões (sanfona fechada) | `[ime_comissoes]` |
+| Uma comissão (sem sanfona / plano) | `[ime_comissoes id="14"]` |
+| Várias comissões (sanfona fechada) | `[ime_comissoes ids="13,14,15"]` |
+| Por categoria (sanfona fechada) | `[ime_comissoes tipo="conselhos-departamento"]` |
+| Lista pré-aberta por padrão | `[ime_comissoes tipo="conselhos-departamento" layout="acordeon-aberto"]` |
+| Forçar sanfona fechada para ID único | `[ime_comissoes id="14" layout="acordeon"]` |
+| Múltiplos IDs sem sanfona | `[ime_comissoes ids="13,14" layout="plano"]` |
 
 ---
 

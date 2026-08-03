@@ -307,9 +307,12 @@ O WordPress consome o conteúdo da API por meio de shortcode.
 ## Variações úteis
 
 ```text
-[ime_comissoes id="14"]
+[ime_comissoes id="14"] (Exibe como plano por padrão)
 [ime_comissoes ids="13,14,15"]
 [ime_comissoes tipo="conselhos-departamento"]
+[ime_comissoes tipo="conselhos-departamento" layout="acordeon-aberto"]
+[ime_comissoes id="14" layout="acordeon"] (Força o acordeon fechado para item único)
+[ime_comissoes ids="13,14" layout="plano"] (Exibe comissões sem comportamento sanfona)
 ```
 
 ## Observações importantes

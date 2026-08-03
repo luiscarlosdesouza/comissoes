@@ -12,9 +12,10 @@ if (!defined('ABSPATH')) {
 
 function ime_comissoes_shortcode($atts) {
     $a = shortcode_atts(array(
-        'id'   => '',
-        'ids'  => '',
-        'tipo' => ''
+        'id'     => '',
+        'ids'    => '',
+        'tipo'   => '',
+        'layout' => 'acordeon'
     ), $atts);
 
     $api_url = 'http://localhost:8020/api/comissoes/html';
@@ -30,9 +31,14 @@ function ime_comissoes_shortcode($atts) {
         if (!empty($a['tipo'])) {
             $query_args['tipo'] = sanitize_text_field($a['tipo']);
         }
-        if (!empty($query_args)) {
-            $api_url = add_query_arg($query_args, $api_url);
-        }
+    }
+
+    if (!empty($a['layout'])) {
+        $query_args['layout'] = sanitize_text_field($a['layout']);
+    }
+
+    if (!empty($query_args)) {
+        $api_url = add_query_arg($query_args, $api_url);
     }
 
     // Faz a requisição HTTP para a API

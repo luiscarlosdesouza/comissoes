@@ -318,6 +318,20 @@ Outras variações possíveis:
 [ime_comissoes tipo="cursos-graduacao"]
 ```
 
+### 11.5 Variações de layout (Parâmetro layout)
+
+Você pode passar o parâmetro `layout` para customizar a exibição:
+
+- **`layout="acordeon"`** (Padrão para listas): Itens em sanfona fechados por padrão.
+- **`layout="acordeon-aberto"`**: Itens em sanfona, abertos ao carregar a página (permite clicar para fechar).
+- **`layout="plano"`** (Padrão para ID único): Exibe a tabela diretamente, sem sanfona.
+
+Exemplos:
+```text
+[ime_comissoes tipo="orgaos-colegiados" layout="acordeon-aberto"]
+[ime_comissoes id="14" layout="plano"]
+```
+
 ---
 
 ## 12. Organização em páginas do WordPress
@@ -542,9 +556,11 @@ docker compose up -d
 - usar o bloco **Shortcode**;
 - inserir:
   - `[ime_comissoes]`
-  - `[ime_comissoes id="14"]`
+  - `[ime_comissoes id="14"]` (exibe como layout plano por padrão)
   - `[ime_comissoes ids="14,7,22"]`
   - `[ime_comissoes tipo="conselhos-departamento"]`
+  - `[ime_comissoes tipo="conselhos-departamento" layout="acordeon-aberto"]`
+  - `[ime_comissoes ids="14,7" layout="plano"]`
 
 ---
 

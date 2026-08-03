@@ -38,7 +38,7 @@ Este é um microsserviço desenvolvido em Python (FastAPI) para automatizar o we
 
 - **URL:** `http://SEU-IP:8020/admin/login`
 - **Credenciais padrão:** Baseadas no seu arquivo `.env` (Padrão: `admin` / `adminusp`).
-- No Dashboard Administrativo, você pode acompanhar o status da atualização (com barra de progresso visual), forçar a extração de dados e visualizar comissões individualmente.
+- No Dashboard Administrativo, você pode cadastrar, excluir, **editar** (nome, URL e categoria mantendo o mesmo ID) e forçar a atualização (com progresso visual em tempo real) das comissões.
 
 ## Integração e Uso no WordPress
 
@@ -66,11 +66,26 @@ A integração com o WordPress é feita via um shortcode altamente customizável
 ```text
 [ime_comissoes id="14"]
 ```
-> Exibe a comissão específica já totalmente aberta (sem o estilo accordion). Ideal para injetar dados em páginas exclusivas (ex: a página fixa da Congregação).
+> Exibe a comissão específica já totalmente aberta (sem o estilo accordion/sanfona). Ideal para injetar dados em páginas exclusivas (ex: a página fixa da Congregação).
+
+### 5. Layouts e Estados Personalizados (Sanfona)
+Você pode usar o atributo `layout` para forçar o comportamento visual da comissão ou lista:
+* **Sanfona fechada** (padrão para listas):
+  ```text
+  [ime_comissoes tipo="orgaos-colegiados" layout="acordeon"]
+  ```
+* **Sanfona aberta por padrão** (inicia aberta, mas permite clicar para fechar):
+  ```text
+  [ime_comissoes tipo="orgaos-colegiados" layout="acordeon-aberto"]
+  ```
+* **Sem sanfona / Plano** (exibe diretamente a tabela, padrão para comissão única):
+  ```text
+  [ime_comissoes ids="13,14" layout="plano"]
+  ```
 
 ## Endpoints da API para Desenvolvedores
 
 Caso queira integrar em outros lugares, a API expõe os seguintes endpoints principais:
 - `GET /api/comissoes`: Retorna todas as comissões (com membros e categorias) em formato estrito **JSON**. (Suporta parâmetros `?ids=` e `?tipo=`)
-- `GET /api/comissoes/html`: Retorna o HTML pré-formatado das comissões. (Suporta parâmetros `?ids=` e `?tipo=`)
-- `GET /api/comissao/{id}/html`: Retorna o HTML de uma única comissão já na visão expandida.
+- `GET /api/comissoes/html`: Retorna o HTML das comissões. (Suporta parâmetros `?ids=`, `?tipo=` e `?layout=`)
+- `GET /api/comissao/{id}/html`: Retorna o HTML de uma única comissão. (Suporta parâmetro `?layout=`)
