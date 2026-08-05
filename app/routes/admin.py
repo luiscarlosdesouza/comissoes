@@ -78,9 +78,17 @@ async def force_update_all(request: Request, background_tasks: BackgroundTasks, 
     if not check_auth(request):
         return RedirectResponse(url="/admin/login", status_code=status.HTTP_302_FOUND)
         
-    # Agendamos na background task do FastAPI o update geral
+    # Agendamos na background task do FastAPI o update geral com sessão isolada
+    async def bg_update():
+        from app.database import SessionLocal
+        bg_db = SessionLocal()
+        try:
+            await update_all_comissoes(bg_db)
+        finally:
+            bg_db.close()
+            
     loop = asyncio.get_event_loop()
-    loop.create_task(update_all_comissoes(db))
+    loop.create_task(bg_update())
     
     return templates.TemplateResponse("admin/dashboard.html", {
         "request": request,
@@ -97,20 +105,32 @@ async def force_update_single(request: Request, comissao_id: int, db: Session = 
     comissao = db.query(models.Comissao).filter(models.Comissao.id == comissao_id).first()
     
     if comissao:
-        # Para evitar travar a UI por mto tempo, mandamos essa task específica pro loop
+        # Para evitar travar a UI por mto tempo, mandamos essa task específica pro loop com sessão isolada
         async def update_single():
             from datetime import datetime
-            data_json = await scrape_comissao(comissao.url)
-            if data_json.get("secoes"):
-                db.query(models.Membro).filter(models.Membro.comissao_id == comissao.id).delete()
-                for secao in data_json["secoes"]:
-                    categoria = secao.get("nome", "Geral")
-                    for m in secao.get("membros", []):
-                        periodo_str = f"{m.get('inicio_mandato', '')} - {m.get('fim_mandato', '')}".strip(" -")
-                        novo_membro = models.Membro(comissao_id=comissao.id, nome=m.get("nome", ""), cargo=categoria, periodo=periodo_str)
-                        db.add(novo_membro)
-                comissao.data_atualizacao = datetime.utcnow()
-                db.commit()
+            from app.database import SessionLocal
+            
+            bg_db = SessionLocal()
+            try:
+                # Query a comissão dentro da sessão local do background task
+                bg_comissao = bg_db.query(models.Comissao).filter(models.Comissao.id == comissao_id).first()
+                if bg_comissao:
+                    data_json = await scrape_comissao(bg_comissao.url)
+                    if data_json.get("secoes"):
+                        bg_db.query(models.Membro).filter(models.Membro.comissao_id == bg_comissao.id).delete()
+                        for secao in data_json["secoes"]:
+                            categoria = secao.get("nome", "Geral")
+                            for m in secao.get("membros", []):
+                                periodo_str = f"{m.get('inicio_mandato', '')} - {m.get('fim_mandato', '')}".strip(" -")
+                                novo_membro = models.Membro(comissao_id=bg_comissao.id, nome=m.get("nome", ""), cargo=categoria, periodo=periodo_str)
+                                bg_db.add(novo_membro)
+                        bg_comissao.data_atualizacao = datetime.utcnow()
+                        bg_db.commit()
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"Erro ao atualizar comissão {comissao_id} no background: {e}")
+            finally:
+                bg_db.close()
                 
         loop = asyncio.get_event_loop()
         loop.create_task(update_single())

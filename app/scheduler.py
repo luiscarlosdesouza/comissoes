@@ -11,15 +11,15 @@ import os
 tz = os.getenv("TZ", "UTC")
 scheduler = AsyncIOScheduler(timezone=tz)
 
-def run_scraper_job():
+async def run_scraper_job():
     """Roda a rotina asíncrona de atualização no Scheduler de madrugada."""
     logger.info("Iniciando rotina agendada (Madrugada) de atualização de comissões...")
     db = SessionLocal()
     try:
-        loop = asyncio.get_event_loop()
-        loop.create_task(update_all_comissoes(db))
+        await update_all_comissoes(db)
     except Exception as e:
-        logger.error(f"Erro ao agendar a rotina de atualização noturna: {e}")
+        logger.error(f"Erro na rotina de atualização noturna: {e}")
+    finally:
         db.close()
 
 def start_scheduler():
